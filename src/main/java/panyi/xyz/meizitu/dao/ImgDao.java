@@ -24,7 +24,7 @@ import panyi.xyz.meizitu.model.Section;
 public interface ImgDao {
     @Insert("insert into image (sid,url ,name,refer,extra,updateTime) " +
             "values(#{sid},#{url},#{name},#{refer},#{extra},#{updateTime})")
-    @SelectKey(statement = "select seq as id  from sqlite_sequence where (name='image')",
+    @SelectKey(statement = "select seq as id from sqlite_sequence where (name='image')",
             before = false, keyProperty = "id", resultType = int.class)
     public int insertImage(Image image);
 

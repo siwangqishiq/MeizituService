@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 import panyi.xyz.meizitu.Config;
 import panyi.xyz.meizitu.model.Image;
 import panyi.xyz.meizitu.model.Section;
+import panyi.xyz.meizitu.service.ImgService;
 import panyi.xyz.meizitu.service.SectionService;
 import panyi.xyz.meizitu.util.UrlUtil;
 
@@ -28,9 +29,10 @@ public class MeiziDataFetchTask {
     @Autowired
     private SectionService mSectionService;
 
+    @Autowired
+    private ImgService mImageService;
 
-
-    @Scheduled(fixedDelay =60 * 60 *1000)
+    @Scheduled(fixedDelay =60 * 60 * 1000)
     public void fetchData() {
         System.out.println("fetch data from meizitu " + MEI_URL);
 
@@ -54,9 +56,9 @@ public class MeiziDataFetchTask {
                         if(images != null){
                             for(Image img : images){
                                 //System.out.println(img.getImage() + "    " +img.getRefer() +"  " + img.getSid());
-
-
-                            }
+                                long imgId = mImageService.insertImage(insertSection.getSid() , insertSection.getContent() ,img.getRefer() , img.getUrl());
+                                System.out.println("imgID --> " + imgId);
+                            }//end for each
                             insertSection.setImageCount(images.size());
                             int row = mSectionService.updateSection(insertSection);
                             System.out.println("row = " + row);
