@@ -51,14 +51,18 @@ public class MeiziDataFetchTask {
 
         boolean continueSearch = true;
 
-        try {
             //List<Section> sectionList = new ArrayList<Section>(32);
 
             while (!StringUtils.isEmpty(url)) {
                 System.out.println("url = " + url);
-
-                final Document doc = Jsoup.connect(url).userAgent(Config.UA).get();
-                final List<Section> list = readNodeList(url, doc);
+                List<Section> list = null;
+                Document doc = null;
+                try {
+                    doc = Jsoup.connect(url).userAgent(Config.UA).get();
+                    list = readNodeList(url, doc);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
                 if (list != null) {
                     for (Section section : list) {
@@ -73,7 +77,17 @@ public class MeiziDataFetchTask {
                         System.out.println("add section " + insertSection.getSid() + "  " + insertSection.getContent());
                         addSectionCount++;
 
-                        final Document imageDoc = Jsoup.connect(section.getLink()).userAgent(Config.UA).get();
+                        Document imageDoc = null;
+                        try {
+                            imageDoc = Jsoup.connect(section.getLink()).userAgent(Config.UA).get();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        if(imageDoc == null){
+                            continue;
+                        }
+
                         Image first = readMainImage(imageDoc, section.getRefer());
                         List<Image> images = readImages(imageDoc, first, insertSection.getSid());
 
@@ -98,13 +112,14 @@ public class MeiziDataFetchTask {
                 }
 
                 url = readNextUrl(doc);
-                Thread.sleep(300);
+                try {
+                    Thread.sleep(300);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }//end while
 
             System.out.println("ADD New Section : " + addSectionCount + "   New Image : " + addImageCount);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     /**
