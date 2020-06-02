@@ -1,9 +1,6 @@
 package panyi.xyz.meizitu.dao;
 
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.SelectKey;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 import panyi.xyz.meizitu.model.Section;
 
@@ -36,4 +33,8 @@ public interface SectionDao {
     @Update("update section set content =#{content} ,link =#{link} ,  refer =#{refer}," +
             "image = #{image}, imageCount = #{imageCount},updateTime=#{updateTime},extra=#{extra}  where sid = #{sid}")
     int updateSection(Section section);
-}
+
+    @Select("select sid, content,link ,refer, image,imageCount,updateTime,extra from section order by updateTime desc limit 1")
+    Section findLastSection();
+
+}//end class

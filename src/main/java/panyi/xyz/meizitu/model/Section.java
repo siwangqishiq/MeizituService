@@ -10,6 +10,18 @@ public class Section {
     private int imageCount;
     private String extra;
 
+    /**
+     *
+     * @param sec
+     * @return
+     */
+    public boolean isSame(Section sec){
+        if(sec == null || link == null || content == null || image == null)
+            return false;
+
+        return link.equals(sec.link) && content.equals(sec.content) && image.equals(sec.image);
+    }
+
     public String getExtra() {
         return extra;
     }

@@ -23,6 +23,10 @@ import java.util.List;
 import static panyi.xyz.meizitu.Config.MEI_URL;
 import static panyi.xyz.meizitu.util.UrlUtil.isDigitsOnly;
 
+/**
+ *   定时拉取数据 存入db
+ *
+ */
 @Component
 public class MeiziDataFetchTask {
 
@@ -32,53 +36,73 @@ public class MeiziDataFetchTask {
     @Autowired
     private ImgService mImageService;
 
-    @Scheduled(fixedDelay =60 * 60 * 1000)
+    @Scheduled(fixedDelay = 12 * 60 * 60 * 1000)
     public void fetchData() {
         System.out.println("fetch data from meizitu " + MEI_URL);
 
-        String url = MEI_URL;
-        try{
-            List<Section> sectionList = new ArrayList<Section>(32);
+        int addSectionCount = 0;
+        int addImageCount = 0;
 
-            while(!StringUtils.isEmpty(url)){
+        final Section lastSection = mSectionService.findLastSection(); //上一次发现的section
+
+        String url = MEI_URL;
+
+        long updateTime = System.currentTimeMillis(); //插入的数据降序排列
+
+        boolean continueSearch = true;
+
+        try {
+            //List<Section> sectionList = new ArrayList<Section>(32);
+
+            while (!StringUtils.isEmpty(url)) {
                 System.out.println("url = " + url);
 
                 final Document doc = Jsoup.connect(url).userAgent(Config.UA).get();
-                final List<Section> list = readNodeList(url , doc);
-                if(list != null){
-                    for(Section section : list){
-                        final Section insertSection = mSectionService.insertSection(section.getContent()  , section.getLink() , section.getRefer() , section.getImage() );
+                final List<Section> list = readNodeList(url, doc);
+
+                if (list != null) {
+                    for (Section section : list) {
+                        if (lastSection != null && section.isSame(lastSection)) {//
+                            continueSearch = false;
+                            break;
+                        }
+
+                        final Section insertSection = mSectionService.insertSection(section.getContent(), section.getLink(), section.getRefer(), section.getImage() , updateTime);
+                        updateTime--;
+
+                        System.out.println("add section " + insertSection.getSid() + "  " + insertSection.getContent());
+                        addSectionCount++;
 
                         final Document imageDoc = Jsoup.connect(section.getLink()).userAgent(Config.UA).get();
-                        Image first = readMainImage(imageDoc , section.getRefer());
-                        List<Image> images = readImages(imageDoc , first , insertSection.getSid());
+                        Image first = readMainImage(imageDoc, section.getRefer());
+                        List<Image> images = readImages(imageDoc, first, insertSection.getSid());
 
-                        if(images != null){
-                            for(Image img : images){
+                        if (images != null) {
+                            for (Image img : images) {
                                 //System.out.println(img.getImage() + "    " +img.getRefer() +"  " + img.getSid());
-                                long imgId = mImageService.insertImage(insertSection.getSid() , insertSection.getContent() ,img.getRefer() , img.getUrl());
-                                System.out.println("imgID --> " + imgId);
+                                long imgId = mImageService.insertImage(insertSection.getSid(), insertSection.getContent(), img.getRefer(), img.getUrl());
+                                System.out.println("add image imgID --> " + imgId + " " + img.getUrl());
+                                addImageCount++;
                             }//end for each
                             insertSection.setImageCount(images.size());
                             int row = mSectionService.updateSection(insertSection);
-                            System.out.println("row = " + row);
+                            //System.out.println("row = " + row);
                         }
                     }//end for each
+
+
                 }
 
-                if(list != null && list.size() > 0){
-                    sectionList.addAll(list);
+                if(!continueSearch){//不再继续搜索
+                    break;
                 }
 
                 url = readNextUrl(doc);
-                Thread.sleep(400);
+                Thread.sleep(300);
             }//end while
 
-
-            if(sectionList.size() > 0){
-
-            }
-        }catch (Exception e){
+            System.out.println("ADD New Section : " + addSectionCount + "   New Image : " + addImageCount);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -132,7 +156,6 @@ public class MeiziDataFetchTask {
     }
 
     /**
-     *
      * @param doc
      * @return
      */
@@ -173,10 +196,9 @@ public class MeiziDataFetchTask {
     }
 
     /**
-     *  section read images
-     *
+     * section read images
      */
-    private List<Image> readImages(Document doc, Image firstNode , int sectionId) {
+    private List<Image> readImages(Document doc, Image firstNode, int sectionId) {
         if (doc == null || firstNode == null)
             return null;
 
@@ -221,19 +243,19 @@ public class MeiziDataFetchTask {
         String imageFormat = UrlUtil.getImageFormatStr(suffix, imageBaseUrl);
 
         String linkBase = UrlUtil.findUrlWithOutSufix(link);
-        String linkFormat = linkBase+"/%s";
+        String linkFormat = linkBase + "/%s";
 
         List<Image> imageList = new ArrayList<Image>();
-        for(int i = 1;i<=totalNum;i++){
-            String refer = String.format(linkFormat,i);
+        for (int i = 1; i <= totalNum; i++) {
+            String refer = String.format(linkFormat, i);
             String imageUrl = null;
-            if(i<10){
-                imageUrl = String.format(imageFormat,"0"+i);
-            }else{
-                imageUrl = String.format(imageFormat,i);
+            if (i < 10) {
+                imageUrl = String.format(imageFormat, "0" + i);
+            } else {
+                imageUrl = String.format(imageFormat, i);
             }
 
-            Image imageNode=new Image();
+            Image imageNode = new Image();
             imageNode.setUrl(imageUrl);
             imageNode.setRefer(refer);
             imageNode.setSid(sectionId);
