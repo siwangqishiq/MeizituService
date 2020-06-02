@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import panyi.xyz.meizitu.dao.ImgDao;
 import panyi.xyz.meizitu.model.Image;
 
+import java.util.List;
+
 @Service
 public class ImgService {
     @Autowired
@@ -21,4 +23,15 @@ public class ImgService {
         mImgDao.insertImage(img);
         return img.getId();
     }
-}
+
+    /**
+     *  根据sectionId 查询图片列表
+     *
+     * @param sid
+     * @return
+     */
+    public List<Image> queryImageListBySid(long sid){
+        return mImgDao.queryImageBySid(sid);
+    }
+
+}//end class

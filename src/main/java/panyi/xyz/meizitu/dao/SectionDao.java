@@ -4,6 +4,8 @@ import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 import panyi.xyz.meizitu.model.Section;
 
+import java.util.List;
+
 
 /**
  *
@@ -37,4 +39,11 @@ public interface SectionDao {
     @Select("select sid, content,link ,refer, image,imageCount,updateTime,extra from section order by updateTime desc limit 1")
     Section findLastSection();
 
+    @Select("select sid, content,link ,refer, image,imageCount,updateTime,extra from section " +
+            " order by updateTime desc limit #{pageSize}")
+    List<Section> querySectionListRecent(int pageSize);
+
+    @Select("select sid, content,link ,refer, image,imageCount,updateTime,extra from section " +
+            "where updateTime < #{updateTime} order by updateTime desc limit #{pageSize}")
+    List<Section> querySectionList(int pageSize , long updateTime);
 }//end class

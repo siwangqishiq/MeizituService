@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import panyi.xyz.meizitu.dao.SectionDao;
 import panyi.xyz.meizitu.model.Section;
 
+import java.util.List;
+
 /**
  *  图片族数据服务
  *
@@ -40,6 +42,21 @@ public class SectionService {
      */
     public Section findLastSection(){
         return mSectionDao.findLastSection();
+    }
+
+
+    /**
+     *  查询图片族列表
+     * @param updateTime
+     * @param pageSize
+     * @return
+     */
+    public List<Section> querySectionList(long updateTime , int pageSize){
+        if(updateTime <= 0){ //返回最新的pageSize条数据
+            return mSectionDao.querySectionListRecent(pageSize);
+        }else{ //返回updateTime 时间点之后的 pagesize条数据 用于分页
+            return mSectionDao.querySectionList(pageSize , updateTime);
+        }
     }
 
 }//end class
