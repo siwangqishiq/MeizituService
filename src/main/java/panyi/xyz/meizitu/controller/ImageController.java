@@ -29,7 +29,7 @@ public class ImageController {
         System.out.println("/images   sid = " + sid);
 
         List<Image> list = mImageService.queryImageListBySid(sid);
-        System.out.println("/images result size = " + list!=null?list.size():null);
+        System.out.println("/images result size = " + (list!=null?list.size():null));
 
         return Resp.genResp(list);
     }

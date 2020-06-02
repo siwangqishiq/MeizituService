@@ -34,7 +34,7 @@ public class SectionController {
         List<Section> list = mSectionService.querySectionList(updatetime  , pagesize);
         Resp<List<Section>> result = Resp.genResp(list);
 
-        System.out.println("/sections result size = " + list!=null?list.size():null);
+        System.out.println("/sections result size = " + (list!=null?list.size():null));
         return result;
     }
 
