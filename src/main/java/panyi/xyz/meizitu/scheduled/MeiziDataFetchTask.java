@@ -24,8 +24,7 @@ import static panyi.xyz.meizitu.Config.MEI_URL;
 import static panyi.xyz.meizitu.util.UrlUtil.isDigitsOnly;
 
 /**
- *   定时拉取数据 存入db
- *
+ * 定时拉取数据 存入db
  */
 @Component
 public class MeiziDataFetchTask {
@@ -51,75 +50,75 @@ public class MeiziDataFetchTask {
 
         boolean continueSearch = true;
 
-            //List<Section> sectionList = new ArrayList<Section>(32);
+        //List<Section> sectionList = new ArrayList<Section>(32);
 
-            while (!StringUtils.isEmpty(url)) {
-                System.out.println("url = " + url);
-                List<Section> list = null;
-                Document doc = null;
-                try {
-                    doc = Jsoup.connect(url).userAgent(Config.UA).get();
-                    list = readNodeList(url, doc);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        while (!StringUtils.isEmpty(url)) {
+            System.out.println("url = " + url);
+            List<Section> list = null;
+            Document doc = null;
+            try {
+                doc = Jsoup.connect(url).userAgent(Config.UA).get();
+                list = readNodeList(url, doc);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
-                if (list != null) {
-                    for (Section section : list) {
-                        if (lastSection != null && section.isSame(lastSection)) {//
-                            continueSearch = false;
-                            break;
-                        }
+            if (list != null) {
+                for (Section section : list) {
+                    if (lastSection != null && section.isSame(lastSection)) {//
+                        continueSearch = false;
+                        break;
+                    }
 
-                        final Section insertSection = mSectionService.insertSection(section.getContent(), section.getLink(), section.getRefer(), section.getImage() , updateTime);
-                        updateTime--;
+                    final Section insertSection = mSectionService.insertSection(section.getContent(), section.getLink(), section.getRefer(), section.getImage(), updateTime);
+                    updateTime--;
 
-                        System.out.println("add section " + insertSection.getSid() + "  " + insertSection.getContent());
-                        addSectionCount++;
+                    System.out.println("add section " + insertSection.getSid() + "  " + insertSection.getContent());
+                    addSectionCount++;
 
-                        Document imageDoc = null;
-                        try {
-                            imageDoc = Jsoup.connect(section.getLink()).userAgent(Config.UA).get();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    Document imageDoc = null;
+                    try {
+                        imageDoc = Jsoup.connect(section.getLink()).userAgent(Config.UA).get();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
 
-                        if(imageDoc == null){
-                            continue;
-                        }
+                    if (imageDoc == null) {
+                        continue;
+                    }
 
-                        Image first = readMainImage(imageDoc, section.getRefer());
-                        List<Image> images = readImages(imageDoc, first, insertSection.getSid());
+                    Image first = readMainImage(imageDoc, section.getRefer());
+                    List<Image> images = readImages(imageDoc, first, insertSection.getSid());
 
-                        if (images != null) {
-                            for (Image img : images) {
-                                //System.out.println(img.getImage() + "    " +img.getRefer() +"  " + img.getSid());
-                                long imgId = mImageService.insertImage(insertSection.getSid(), insertSection.getContent(), img.getRefer(), img.getUrl());
-                                System.out.println("add image imgID --> " + imgId + " " + img.getUrl());
-                                addImageCount++;
-                            }//end for each
-                            insertSection.setImageCount(images.size());
-                            int row = mSectionService.updateSection(insertSection);
-                            //System.out.println("row = " + row);
-                        }
-                    }//end for each
+                    if (images != null) {
+                        for (Image img : images) {
+                            //System.out.println(img.getImage() + "    " +img.getRefer() +"  " + img.getSid());
+                            long imgId = mImageService.insertImage(insertSection.getSid(), insertSection.getContent(), img.getRefer(), img.getUrl());
+                            System.out.println("add image imgID --> " + imgId + " " + img.getUrl());
+                            addImageCount++;
+                        }//end for each
+                        insertSection.setImageCount(images.size());
+                        int row = mSectionService.updateSection(insertSection);
+                        //System.out.println("row = " + row);
+                    }
+                }//end for each
 
 
-                }
+            }
 
-                if(!continueSearch){//不再继续搜索
-                    break;
-                }
+            if (!continueSearch) {//不再继续搜索
+                break;
+            }
 
-                url = readNextUrl(doc);
-                try {
-                    Thread.sleep(300);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }//end while
+            url = readNextUrl(doc);
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }//end while
 
-            System.out.println("ADD New Section : " + addSectionCount + "   New Image : " + addImageCount);
+        System.out.println("ADD New Section : " + addSectionCount + "   New Image : " + addImageCount);
     }
 
     /**
