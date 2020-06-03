@@ -1,5 +1,7 @@
 package panyi.xyz.meizitu.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,6 +17,9 @@ import java.util.List;
  */
 @RestController
 public class SectionController {
+
+    public final static Logger logger = LoggerFactory.getLogger(SectionController.class);
+
     public static final String DEFAULT_SECTION_SIZE = "20";
 
     @Autowired
@@ -29,12 +34,12 @@ public class SectionController {
     public Resp<List<Section>> findSections(
             @RequestParam(value = "pagesize", required = false, defaultValue = DEFAULT_SECTION_SIZE) int pagesize,
             @RequestParam(value = "updatetime", required = false, defaultValue = "0") long updatetime) {
-        System.out.println("/sections  pagesize = " + pagesize +"   updatetime = " + updatetime);
+        logger.info("/sections  pagesize = "+pagesize+" updatetime = " + updatetime);
 
         List<Section> list = mSectionService.querySectionList(updatetime  , pagesize);
         Resp<List<Section>> result = Resp.genResp(list);
 
-        System.out.println("/sections result size = " + (list!=null?list.size():null));
+        logger.info("/sections result size = " + (list!=null?list.size():null));
         return result;
     }
 

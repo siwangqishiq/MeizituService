@@ -5,11 +5,14 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import panyi.xyz.meizitu.Config;
+import panyi.xyz.meizitu.controller.ImageController;
 import panyi.xyz.meizitu.model.Image;
 import panyi.xyz.meizitu.model.Section;
 import panyi.xyz.meizitu.service.ImgService;
@@ -29,6 +32,8 @@ import static panyi.xyz.meizitu.util.UrlUtil.isDigitsOnly;
 @Component
 public class MeiziDataFetchTask {
 
+    private final static Logger logger = LoggerFactory.getLogger(MeiziDataFetchTask.class);
+
     @Autowired
     private SectionService mSectionService;
 
@@ -37,7 +42,7 @@ public class MeiziDataFetchTask {
 
     @Scheduled(fixedDelay = 12 * 60 * 60 * 1000)
     public void fetchData() {
-        System.out.println("fetch data from meizitu " + MEI_URL);
+        logger.info("fetch data from meizitu " + MEI_URL);
 
         int addSectionCount = 0;
         int addImageCount = 0;
@@ -53,14 +58,14 @@ public class MeiziDataFetchTask {
         //List<Section> sectionList = new ArrayList<Section>(32);
 
         while (!StringUtils.isEmpty(url)) {
-            System.out.println("url = " + url);
+            logger.info("url = " + url);
             List<Section> list = null;
             Document doc = null;
             try {
                 doc = Jsoup.connect(url).userAgent(Config.UA).get();
                 list = readNodeList(url, doc);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error(e.toString());
             }
 
             if (list != null) {
@@ -73,7 +78,7 @@ public class MeiziDataFetchTask {
                     final Section insertSection = mSectionService.insertSection(section.getContent(), section.getLink(), section.getRefer(), section.getImage(), updateTime);
                     updateTime--;
 
-                    System.out.println("add section " + insertSection.getSid() + "  " + insertSection.getContent());
+                    logger.info("add section " + insertSection.getSid() + "  " + insertSection.getContent());
                     addSectionCount++;
 
                     Document imageDoc = null;
@@ -94,12 +99,11 @@ public class MeiziDataFetchTask {
                         for (Image img : images) {
                             //System.out.println(img.getImage() + "    " +img.getRefer() +"  " + img.getSid());
                             long imgId = mImageService.insertImage(insertSection.getSid(), insertSection.getContent(), img.getRefer(), img.getUrl());
-                            System.out.println("add image imgID --> " + imgId + " " + img.getUrl());
+                            logger.info("add image imgID --> " + imgId + " " + img.getUrl());
                             addImageCount++;
                         }//end for each
                         insertSection.setImageCount(images.size());
                         int row = mSectionService.updateSection(insertSection);
-                        //System.out.println("row = " + row);
                     }
                 }//end for each
 
@@ -114,11 +118,11 @@ public class MeiziDataFetchTask {
             try {
                 Thread.sleep(300);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.error(e.toString());
             }
         }//end while
 
-        System.out.println("ADD New Section : " + addSectionCount + "   New Image : " + addImageCount);
+        logger.info("ADD New Section : " + addSectionCount + "   New Image : " + addImageCount);
     }
 
     /**
