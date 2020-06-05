@@ -40,7 +40,7 @@ public class MeiziDataFetchTask {
     @Autowired
     private ImgService mImageService;
 
-    @Scheduled(fixedDelay = 12 * 60 * 60 * 1000)
+    @Scheduled(fixedDelay = 1 * 60 * 60 * 1000)
     public void fetchData() {
         logger.info("fetch data from meizitu " + MEI_URL);
 
