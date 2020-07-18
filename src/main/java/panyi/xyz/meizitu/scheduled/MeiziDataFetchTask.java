@@ -97,7 +97,7 @@ public class MeiziDataFetchTask {
 
                     if (images != null) {
                         for (Image img : images) {
-                            //System.out.println(img.getImage() + "    " +img.getRefer() +"  " + img.getSid());
+                            // System.out.println(img.getUrl() + "    " +img.getRefer() +"  " + img.getSid());
                             long imgId = mImageService.insertImage(insertSection.getSid(), insertSection.getContent(), img.getRefer(), img.getUrl());
                             logger.info("add image imgID --> " + imgId + " " + img.getUrl());
                             addImageCount++;
@@ -263,14 +263,29 @@ public class MeiziDataFetchTask {
         String linkBase = UrlUtil.findUrlWithOutSufix(link);
         String linkFormat = linkBase + "/%s";
 
+        int startIndex = 1;
+        try{
+            //部分数据可能不是1开头的  特殊处理下
+            if(suffix.indexOf(".")!= -1){
+                if(suffix.charAt(suffix.indexOf(".") -1) != '1'){
+                    startIndex = Integer.parseInt(suffix.charAt(suffix.indexOf(".") -1)+"");
+                }
+            }
+        }catch (Exception e){
+            startIndex = 1;
+            e.printStackTrace();
+        }
+
         List<Image> imageList = new ArrayList<Image>();
-        for (int i = 1; i <= totalNum; i++) {
+        for (int i = 0; i < totalNum; i++) {
             String refer = String.format(linkFormat, i);
+
+            int offsetIndex = i + startIndex;
             String imageUrl = null;
-            if (i < 10) {
-                imageUrl = String.format(imageFormat, "0" + i);
+            if (offsetIndex < 10) {
+                imageUrl = String.format(imageFormat, "0" + offsetIndex);
             } else {
-                imageUrl = String.format(imageFormat, i);
+                imageUrl = String.format(imageFormat, offsetIndex);
             }
 
             Image imageNode = new Image();
